@@ -15,6 +15,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <uses-feature android:name="android.hardware.usb.host" android:required="true"/>
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -41,21 +43,23 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
             </intent-filter>
         </activity>
 
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"/>
+            android:label="@string/title_activity_settings" />
 
         <activity
             android:name=".LogsActivity"
             android:label="@string/title_activity_logs"
-            android:windowSoftInputMode="stateHidden"/>
+            android:windowSoftInputMode="stateHidden" />
 
-        <activity android:name=".DownloadMapActivity"/>
+        <activity android:name=".DownloadMapActivity" />
+
+        <service android:name="com.mcm001.serial.UsbService" android:enabled="true"/>
     </application>
 
 </manifest>

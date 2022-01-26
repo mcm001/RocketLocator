@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class BleBluetoothGpsManager extends BluetoothGpsManager {
+public class BleBluetoothGpsSource extends GenericGpsSource {
     // currently "FFE0", for receiving standard NMEA sentences
     // maybe the standard "1819" would require different implementation
     private static final UUID UUID_RW_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
@@ -58,14 +58,13 @@ public class BleBluetoothGpsManager extends BluetoothGpsManager {
     private final String deviceAddress;
     private final int maxRetries;
     private AtomicInteger retries = new AtomicInteger(0);
-    private volatile boolean enabled;
     private AtomicBoolean starting = new AtomicBoolean();
     private BluetoothDevice device;
     private BluetoothGatt gatt;
     private Handler uiHandler;
     private NmeaInputMerger merger = new NmeaInputMerger();
 
-    public BleBluetoothGpsManager(Context context, String deviceAddress, int maxRetries) {
+    public BleBluetoothGpsSource(Context context, String deviceAddress, int maxRetries) {
         if (deviceAddress == null || deviceAddress.trim().isEmpty()) {
             throw new IllegalArgumentException("Device address cannot be empty.");
         }
@@ -80,11 +79,6 @@ public class BleBluetoothGpsManager extends BluetoothGpsManager {
     public int getDisableReason() {
         // not used
         return 0;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
     }
 
     @Override

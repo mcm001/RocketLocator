@@ -34,7 +34,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.Menu;
 import android.view.View;
 
-import org.broeuschmeul.android.gps.bluetooth.provider.BluetoothGpsManager;
+import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
 
 public class SettingsActivity extends PreferenceActivity implements OnPreferenceChangeListener, OnSharedPreferenceChangeListener{
 
@@ -98,7 +98,7 @@ public class SettingsActivity extends PreferenceActivity implements OnPreference
 	}
 
 	private void clearCurrentGpsManager() {
-		BluetoothGpsManager blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
+		GenericGpsSource blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
 		if (blueGpsMan != null && blueGpsMan.isEnabled()) {
 			blueGpsMan.disable(false);
 		}

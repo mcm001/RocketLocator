@@ -1,12 +1,16 @@
 apply plugin: 'com.android.application'
 
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
 android {
     compileSdkVersion 28
 
 
     defaultConfig {
         applicationId "com.frankdev.rocketlocator"
-        minSdkVersion 15
+        minSdkVersion 17
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -28,6 +32,11 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 dependencies {
@@ -39,4 +48,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.7.22'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    implementation 'com.github.felHR85:UsbSerial:6.1.0'
 }

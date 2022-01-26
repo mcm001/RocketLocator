@@ -3,7 +3,7 @@ package com.frankdev.rocketlocator;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.broeuschmeul.android.gps.bluetooth.provider.BluetoothGpsManager;
+import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,7 +35,7 @@ public class LogsActivity extends Activity implements Observer {
 			}
 		};
 		
-		BluetoothGpsManager blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
+		GenericGpsSource blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
 		if (blueGpsMan != null) {
 			blueGpsMan.addObserver(this);
 		}		
@@ -99,7 +99,7 @@ public class LogsActivity extends Activity implements Observer {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		BluetoothGpsManager blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
+		GenericGpsSource blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
 		if (blueGpsMan != null) {
 			blueGpsMan.deleteObserver(this);
 		}		

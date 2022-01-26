@@ -18,7 +18,7 @@ public class NmeaInputMergerTest {
     @Mock
     private Consumer<String> mockConsumer;
 
-    private BleBluetoothGpsManager.NmeaInputMerger merger = new BleBluetoothGpsManager.NmeaInputMerger();
+    private BleBluetoothGpsSource.NmeaInputMerger merger = new BleBluetoothGpsSource.NmeaInputMerger();
 
     @Test
     public void testHandleMessagePartSingleStart() {

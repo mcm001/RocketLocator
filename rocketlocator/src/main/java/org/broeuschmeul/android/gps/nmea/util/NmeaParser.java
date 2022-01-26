@@ -82,7 +82,7 @@ public class NmeaParser {
 		String command = null;
 
 		//Log.v(LOG_TAG, "data: "+gpsSentence);
-		Pattern xx = Pattern.compile("\\$([^*$]*)\\*([0-9A-F][0-9A-F])?\r\n");
+		Pattern xx = Pattern.compile("\\$([^*$]*)\\*([0-9A-F][0-9A-F])?[\r\n]+");
 		Matcher m = xx.matcher(gpsSentence);
 		if (m.matches()){
 			nmeaSentence = m.group(0);

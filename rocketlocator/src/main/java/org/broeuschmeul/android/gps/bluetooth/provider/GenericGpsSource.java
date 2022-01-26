@@ -26,16 +26,23 @@ import org.broeuschmeul.android.gps.nmea.util.NmeaParser;
 
 import java.util.Observable;
 
-public abstract class BluetoothGpsManager extends Observable {
+public abstract class GenericGpsSource extends Observable {
     /**
      * Tag used for log messages
      */
     private static final String LOG_TAG = "BlueGPS";
     private NmeaParser parser = new NmeaParser(10f);
 
+    protected volatile boolean enabled;
+
     public abstract int getDisableReason();
 
-    public abstract boolean isEnabled();
+    /**
+     * @return true if the bluetooth GPS is enabled
+     */
+    public synchronized boolean isEnabled() {
+        return enabled;
+    }
 
     public abstract void enable();
 

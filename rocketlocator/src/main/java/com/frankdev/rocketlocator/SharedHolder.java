@@ -1,19 +1,19 @@
 package com.frankdev.rocketlocator;
 
-import org.broeuschmeul.android.gps.bluetooth.provider.BluetoothGpsManager;
+import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
 
 public class SharedHolder {
 	public static int maxDownloadDepth = 4;
 	public static int maxZoom = 20;
 
-	private BluetoothGpsManager blueGpsMan;
+	private GenericGpsSource blueGpsMan;
 	private final ObservableLogs logs = new ObservableLogs();
 	
-	public BluetoothGpsManager getBlueGpsMan() {
+	public GenericGpsSource getBlueGpsMan() {
 		return blueGpsMan;
 	}
 
-	public void setBlueGpsMan(BluetoothGpsManager blueGpsMan) {
+	public void setBlueGpsMan(GenericGpsSource blueGpsMan) {
 		this.blueGpsMan = blueGpsMan;
 	}
 

@@ -26,9 +26,10 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.broeuschmeul.android.gps.bluetooth.provider.BleBluetoothGpsManager;
-import org.broeuschmeul.android.gps.bluetooth.provider.BluetoothGpsManager;
-import org.broeuschmeul.android.gps.bluetooth.provider.ClassicBluetoothGpsManager;
+import com.mcm001.serial.SerialGpsParser;
+import org.broeuschmeul.android.gps.bluetooth.provider.BleBluetoothGpsSource;
+import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
+import org.broeuschmeul.android.gps.bluetooth.provider.ClassicBluetoothGpsSource;
 
 import com.frankdev.rocketlocator.TouchableWrapper.OnMapMoveListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -253,6 +254,11 @@ public class MainActivity extends FragmentActivity implements
         radarBeep.start();
 
         setupBroadcastReceiver();
+
+        serialSource = new SerialGpsParser(this);
+        serialSource.enable();
+        serialSource.onResume();
+        serialSource.addObserver(this);
     }
 
     private void setupBroadcastReceiver() {
@@ -324,12 +330,12 @@ public class MainActivity extends FragmentActivity implements
         Toast.makeText(getBaseContext(), "Starting blue GPS",
                 Toast.LENGTH_SHORT).show();
 
-        BluetoothGpsManager blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
+        GenericGpsSource blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
         if (blueGpsMan == null) {
             if (sharedPreferences.getBoolean(SettingsActivity.PREF_USE_BLE, false)) {
-                blueGpsMan = new BleBluetoothGpsManager(getBaseContext(), deviceAddress, 20);
+                blueGpsMan = new BleBluetoothGpsSource(getBaseContext(), deviceAddress, 20);
             } else {
-                blueGpsMan = new ClassicBluetoothGpsManager(getBaseContext(), deviceAddress, 50);
+                blueGpsMan = new ClassicBluetoothGpsSource(getBaseContext(), deviceAddress, 50);
             }
             SharedHolder.getInstance().setBlueGpsMan(blueGpsMan);
             blueGpsMan.addObserver(this);
@@ -344,10 +350,11 @@ public class MainActivity extends FragmentActivity implements
         } else {
             blueGpsMan.disable(false);
         }
-
         blueGpsMan.enable();
 
     }
+
+    SerialGpsParser serialSource = null;
 
     private float normalizeDegree(float value) {
         if (value >= 0.0f && value <= 180.0f) {
@@ -368,6 +375,7 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        if(serialSource != null) serialSource.onResume();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             setUpMapIfNeeded();
@@ -381,6 +389,11 @@ public class MainActivity extends FragmentActivity implements
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(serialSource != null) serialSource.onPause();
+    }
 
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the
