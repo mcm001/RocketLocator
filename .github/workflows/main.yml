@@ -31,7 +31,6 @@ jobs:
   release:
     name: Release APK
     needs: apk
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Download APK from build
@@ -57,6 +56,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }} 
+        if: startsWith(github.ref, 'refs/tags/v')
       - name: Upload Release APK
         id: upload_release_asset
         uses: actions/upload-release-asset@v1.0.1
@@ -67,3 +67,4 @@ jobs:
           asset_path: apk/rocketlocator-debug.apk
           asset_name: RocketLocator.apk
           asset_content_type: application/zip
+        if: startsWith(github.ref, 'refs/tags/v')
