@@ -713,13 +713,13 @@ public class MainActivity extends FragmentActivity implements
             unitRatio = 3.28f;
         }
 
-        TextView lblCurrentAltitude = (TextView) findViewById(R.id.lblCurrentAltitude);
-        TextView lblMaxAltitude = (TextView) findViewById(R.id.lblMaxAltitude);
-        TextView lblDistance = (TextView) findViewById(R.id.lblDistance);
+        TextView lblCurrentAltitude = findViewById(R.id.lblCurrentAltitude);
+        TextView lblMaxAltitude = findViewById(R.id.lblMaxAltitude);
+        TextView lblDistance = findViewById(R.id.lblDistance);
 
         lblCurrentAltitude.setText(String.format("Current Altitude: %.2f%s",currentAltitude * unitRatio, suffix));
-        lblMaxAltitude.setText(String.format("Current Altitude: %.2f%s",maxAltitude * unitRatio, suffix));
-        lblDistance.setText(String.format("Current Altitude: %.2f%s",rocketDistance * unitRatio, suffix));
+        lblMaxAltitude.setText(String.format("Maximum Altitude: %.2f%s",maxAltitude * unitRatio, suffix));
+        lblDistance.setText(String.format("Distance Altitude: %.2f%s",rocketDistance * unitRatio, suffix));
     }
 
     private void updateRocketLocation() {
