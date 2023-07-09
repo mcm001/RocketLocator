@@ -737,7 +737,7 @@ public class MainActivity extends FragmentActivity
         lblMaxAltitude.setText(
                 String.format("Maximum Altitude: %.2f%s", maxAltitude * unitRatio, suffix));
         lblDistance.setText(
-                String.format("Distance Altitude: %.2f%s", rocketDistance * unitRatio, suffix));
+                String.format("Rocket distance: %.2f%s", rocketDistance * unitRatio, suffix));
     }
 
     private void updateRocketLocation() {
