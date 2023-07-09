@@ -48,12 +48,6 @@ import java.util.concurrent.*;
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class ClassicBluetoothGpsSource extends GenericGpsSource {
-    final Handler handler = new Handler() {
-        @Override
-        public void handleMessage(final Message msgs) {
-            //write your code hear which give error
-        }
-    };
 
     public static GenericGpsSource instance;
     /**
@@ -106,7 +100,7 @@ public class ClassicBluetoothGpsSource extends GenericGpsSource {
 
         @Override
         public void run() {
-            String sentenseStr;
+            String sentenceStr;
             try {
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(gpsInputStream, "US-ASCII"));
@@ -115,9 +109,9 @@ public class ClassicBluetoothGpsSource extends GenericGpsSource {
 
                 while ((enabled)) {
                     if (reader.ready()) {
-                        sentenseStr = "";
+                        sentenceStr = "";
                         //gps connected
-                        if (ready == false) {
+                        if (!ready) {
                             Sounds.gps_connected.start();
                             SharedHolder.getInstance().getLogs().v(LOG_TAG, "GPS Connected");
                             ready = true;
@@ -130,7 +124,7 @@ public class ClassicBluetoothGpsSource extends GenericGpsSource {
 
                         try {
                             //Wait for data and throw TimeoutException if wait for more than 3 sec
-                            sentenseStr = future.get(3, TimeUnit.SECONDS);
+                            sentenceStr = future.get(3, TimeUnit.SECONDS);
                         } catch (TimeoutException e) {
                             SharedHolder.getInstance().getLogs().v(LOG_TAG, "GPS Disconnected");
                             Sounds.gps_disconnected.start();
@@ -141,9 +135,9 @@ public class ClassicBluetoothGpsSource extends GenericGpsSource {
                             e.printStackTrace();
                         }
 
-                        if (enabled && sentenseStr != null && !sentenseStr.isEmpty()) {
+                        if (enabled && sentenceStr != null && !sentenceStr.isEmpty()) {
                             //SharedHolder.getInstance().getLogs().v(LOG_TAG, "data: "+System.currentTimeMillis()+" "+s);
-                            notifyNmeaSentence(sentenseStr);
+                            notifyNmeaSentence(sentenceStr);
                         }
                         lastRead = SystemClock.uptimeMillis();
                     } else {

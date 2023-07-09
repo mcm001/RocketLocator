@@ -2,16 +2,13 @@ package com.frankdev.rocketlocator;
 
 import com.google.android.gms.maps.model.Tile;
 import com.google.android.gms.maps.model.TileProvider;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 
-/**
- * Created by Francois on 2016-06-09.
- */
+/** Created by Francois on 2016-06-09. */
 public abstract class CachedTileProvider implements TileProvider {
     private int width;
     private int height;
@@ -35,21 +32,20 @@ public abstract class CachedTileProvider implements TileProvider {
     public abstract URL getTileUrl(int x, int y, int zoom);
 
     private Tile downloadOrLoadTile(int x, int y, int zoom, int depth, boolean load) {
-        if(cancelled) return NO_TILE;
-        if(zoom > maxZoom) return NO_TILE;
+        if (cancelled) return NO_TILE;
+        if (zoom > maxZoom) return NO_TILE;
 
-        int maxTile = (int) (Math.pow(2,zoom)) - 1;
-        if(x > maxTile || y > maxTile) return NO_TILE;
+        int maxTile = (int) (Math.pow(2, zoom)) - 1;
+        if (x > maxTile || y > maxTile) return NO_TILE;
 
         Tile tile = NO_TILE;
 
         tileCount++;
 
-        if(cache.tileExists(x,y,zoom)) {
-            if(load) // Don't need to load from disk when download recursive
-                tile = cache.getTile(x, y, zoom);
-            else
-                tile = NO_TILE;
+        if (cache.tileExists(x, y, zoom)) {
+            if (load) // Don't need to load from disk when download recursive
+            tile = cache.getTile(x, y, zoom);
+            else tile = NO_TILE;
         } else {
 
             URL tileProviderURL = this.getTileUrl(x, y, zoom);
@@ -79,15 +75,13 @@ public abstract class CachedTileProvider implements TileProvider {
         return tile;
     }
 
-
     @Override
     public final Tile getTile(int x, int y, int zoom) {
         pendingTileCount++;
-        Tile tile = downloadOrLoadTile(x,y,zoom, downloadDepth, true);
+        Tile tile = downloadOrLoadTile(x, y, zoom, downloadDepth, true);
         pendingTileCount--;
 
-        if(pendingTileCount <= 0)
-            cancelled = false;
+        if (pendingTileCount <= 0) cancelled = false;
         return tile;
     }
 
@@ -97,18 +91,19 @@ public abstract class CachedTileProvider implements TileProvider {
         return bytes.toByteArray();
     }
 
-    private static long downloadData(InputStream onlineStream, OutputStream bytes) throws IOException {
+    private static long downloadData(InputStream onlineStream, OutputStream bytes)
+            throws IOException {
         byte[] var2 = new byte[4096];
         long numBytes = 0L;
 
-        while(true) {
+        while (true) {
             int byteRead = onlineStream.read(var2);
-            if(byteRead == -1) {
+            if (byteRead == -1) {
                 return numBytes;
             }
 
             bytes.write(var2, 0, byteRead);
-            numBytes += (long)byteRead;
+            numBytes += (long) byteRead;
         }
     }
 

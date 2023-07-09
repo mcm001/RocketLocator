@@ -51,3 +51,23 @@ dependencies {
 
     implementation 'com.github.felHR85:UsbSerial:6.1.0'
 }
+
+apply plugin: "com.diffplug.spotless"
+spotless {
+    java {
+        toggleOffOn()
+        googleJavaFormat()
+        indentWithTabs(2)
+        indentWithSpaces(4)
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    java {
+        target "**/*.java"
+    }
+    format 'xml', {
+        target '**/*.xml'
+    }
+}
+

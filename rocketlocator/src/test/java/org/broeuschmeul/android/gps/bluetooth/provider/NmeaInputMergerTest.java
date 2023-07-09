@@ -1,24 +1,24 @@
 package org.broeuschmeul.android.gps.bluetooth.provider;
 
-import android.support.v4.util.Consumer;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
+import android.support.v4.util.Consumer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-
 @RunWith(MockitoJUnitRunner.class)
 public class NmeaInputMergerTest {
 
-    private static final String NMEA = "$GPGGA,114919.000,4712.4294,N,01815.2761,E,1,04,3.7,178.3,M,0.0,M,,*60";
+    private static final String NMEA =
+            "$GPGGA,114919.000,4712.4294,N,01815.2761,E,1,04,3.7,178.3,M,0.0,M,,*60";
 
-    @Mock
-    private Consumer<String> mockConsumer;
+    @Mock private Consumer<String> mockConsumer;
 
-    private BleBluetoothGpsSource.NmeaInputMerger merger = new BleBluetoothGpsSource.NmeaInputMerger();
+    private BleBluetoothGpsSource.NmeaInputMerger merger =
+            new BleBluetoothGpsSource.NmeaInputMerger();
 
     @Test
     public void testHandleMessagePartSingleStart() {
@@ -41,7 +41,9 @@ public class NmeaInputMergerTest {
 
     @Test
     public void testHandleMessagePartMultiStart() {
-        String[] nmeaParts = { "$GPGGA,114919.000,47", "12.4294,N,01815.2761", ",E,1,04,3.7,178.3,M,", "0.0,M,,*60" };
+        String[] nmeaParts = {
+            "$GPGGA,114919.000,47", "12.4294,N,01815.2761", ",E,1,04,3.7,178.3,M,", "0.0,M,,*60"
+        };
         for (String nmeaPart : nmeaParts) {
             merger.handleMessagePart(nmeaPart, mockConsumer);
         }
@@ -52,7 +54,9 @@ public class NmeaInputMergerTest {
 
     @Test
     public void testHandleMessagePartMultiMiddle() {
-        String[] nmeaParts = { "$GPGGA,114919.000,47", "12.4294,N,01815.2761", ",E,1,04,3.7,178.3,M,", "0.0,M,,*60" };
+        String[] nmeaParts = {
+            "$GPGGA,114919.000,47", "12.4294,N,01815.2761", ",E,1,04,3.7,178.3,M,", "0.0,M,,*60"
+        };
         merger.handleMessagePart("something", mockConsumer);
         for (String nmeaPart : nmeaParts) {
             merger.handleMessagePart(nmeaPart, mockConsumer);
@@ -62,5 +66,4 @@ public class NmeaInputMergerTest {
         verify(mockConsumer).accept(eq("something"));
         verify(mockConsumer).accept(eq(NMEA));
     }
-
 }

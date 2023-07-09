@@ -1,23 +1,22 @@
 /*
- * Copyright (C) 2020 Balazs Mihaly | mihu86
- *
- * This file is part of Rocket Finder.
- *
- * Rocket Finder is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Rocket Finder is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with Rocket Finder. If not, see <http://www.gnu.org/licenses/>.*/
+* Copyright (C) 2020 Balazs Mihaly | mihu86
+*
+* This file is part of Rocket Finder.
+*
+* Rocket Finder is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Rocket Finder is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with Rocket Finder. If not, see <http://www.gnu.org/licenses/>.*/
 
 package org.broeuschmeul.android.gps.bluetooth.provider;
-
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
@@ -33,9 +32,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.util.Consumer;
 import android.widget.Toast;
-
 import com.frankdev.rocketlocator.SharedHolder;
-
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -46,12 +43,12 @@ import java.util.regex.Pattern;
 public class BleBluetoothGpsSource extends GenericGpsSource {
     // currently "FFE0", for receiving standard NMEA sentences
     // maybe the standard "1819" would require different implementation
-    private static final UUID UUID_RW_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
-    private static final UUID UUID_RW_CHARACTERISTIC = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
+    private static final UUID UUID_RW_SERVICE =
+            UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
+    private static final UUID UUID_RW_CHARACTERISTIC =
+            UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
 
-    /**
-     * Tag used for log messages
-     */
+    /** Tag used for log messages */
     private static final String LOG_TAG = "BlueGPS";
 
     private final Context context;
@@ -108,7 +105,8 @@ public class BleBluetoothGpsSource extends GenericGpsSource {
 
             BluetoothGattService service = gatt.getService(UUID_RW_SERVICE);
             if (service != null) {
-                gatt.setCharacteristicNotification(service.getCharacteristic(UUID_RW_CHARACTERISTIC), false);
+                gatt.setCharacteristicNotification(
+                        service.getCharacteristic(UUID_RW_CHARACTERISTIC), false);
             }
             gatt.disconnect();
             gatt.close();
@@ -126,8 +124,15 @@ public class BleBluetoothGpsSource extends GenericGpsSource {
             switch (newState) {
                 case BluetoothGatt.STATE_CONNECTED:
                     starting.set(false);
-                    SharedHolder.getInstance().getLogs().d(LOG_TAG,"Connected to BLE device: " +
-                            gatt.getDevice().getName() + " (" + gatt.getDevice().getAddress() + ")");
+                    SharedHolder.getInstance()
+                            .getLogs()
+                            .d(
+                                    LOG_TAG,
+                                    "Connected to BLE device: "
+                                            + gatt.getDevice().getName()
+                                            + " ("
+                                            + gatt.getDevice().getAddress()
+                                            + ")");
                     gatt.discoverServices();
                     break;
                 case BluetoothProfile.STATE_DISCONNECTED:
@@ -147,45 +152,48 @@ public class BleBluetoothGpsSource extends GenericGpsSource {
             BluetoothGattService service = gatt.getService(UUID_RW_SERVICE);
             if (service != null) {
                 gatt.setCharacteristicNotification(service.getCharacteristic(UUID_RW_CHARACTERISTIC), true);
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context,
-                                "BLE GPS connected",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+                uiHandler.post(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "BLE GPS connected", Toast.LENGTH_SHORT).show();
+                            }
+                        });
             } else {
                 SharedHolder.getInstance().getLogs().e(LOG_TAG, "BLE service \"FFE0\" not supported!");
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context,
-                                "Device does not support BLE service \"FFE0\"",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+                uiHandler.post(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(
+                                                context, "Device does not support BLE service \"FFE0\"", Toast.LENGTH_SHORT)
+                                        .show();
+                            }
+                        });
             }
         }
 
         @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        public void onCharacteristicChanged(
+                BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             try {
-                String messagePart = new String(characteristic.getValue(), "US-ASCII"); // StandardCharsets.US_ASCII
+                String messagePart =
+                        new String(characteristic.getValue(), "US-ASCII"); // StandardCharsets.US_ASCII
                 SharedHolder.getInstance().getLogs().v(LOG_TAG, "Received: " + messagePart);
                 if (!messagePart.isEmpty()) {
-                    merger.handleMessagePart(messagePart, new Consumer<String>() {
-                        @Override
-                        public void accept(String nmeaSentence) {
-                            notifyNmeaSentence(nmeaSentence);
-                        }
-                    });
+                    merger.handleMessagePart(
+                            messagePart,
+                            new Consumer<String>() {
+                                @Override
+                                public void accept(String nmeaSentence) {
+                                    notifyNmeaSentence(nmeaSentence);
+                                }
+                            });
                 }
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalStateException("Standard ASCII not known...");
             }
         }
-
     }
 
     public static class NmeaInputMerger {
@@ -220,6 +228,5 @@ public class BleBluetoothGpsSource extends GenericGpsSource {
             action.accept(nmeaSentence);
             inputBuffer.setLength(0);
         }
-
     }
 }

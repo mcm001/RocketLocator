@@ -2,12 +2,9 @@ package com.frankdev.rocketlocator;
 
 import com.google.android.gms.common.util.IOUtils;
 import com.google.android.gms.maps.model.Tile;
-
 import java.io.*;
 
-/**
- * Created by Francois on 2016-06-09.
- */
+/** Created by Francois on 2016-06-09. */
 public class TileCache {
     private String cachePath;
     int width, height;
@@ -18,17 +15,17 @@ public class TileCache {
         this.height = height;
     }
 
-    public boolean tileExists(int x,int y, int zoom){
+    public boolean tileExists(int x, int y, int zoom) {
         String filepath = getFilepath(x, y, zoom);
         File f = new File(filepath);
         return f.exists();
     }
 
-    public Tile getTile(int x,int y, int zoom){
+    public Tile getTile(int x, int y, int zoom) {
         String filepath = getFilepath(x, y, zoom);
 
         File f = new File(filepath);
-        if(!f.exists()) {
+        if (!f.exists()) {
             return null;
         }
 
@@ -53,11 +50,11 @@ public class TileCache {
         return new Tile(width, height, bytes);
     }
 
-    public void putTile(int x,int y, int zoom, byte[] data) {
+    public void putTile(int x, int y, int zoom, byte[] data) {
         String filepath = getFilepath(x, y, zoom);
 
         File f = new File(filepath);
-        if(f.exists()) {
+        if (f.exists()) {
             return;
         }
 

@@ -1,36 +1,60 @@
 /*
- * Copyright (C) 2013 François Girard
- *
- * This file is part of Rocket Finder.
- *
- * Rocket Finder is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Rocket Finder is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with Rocket Finder. If not, see <http://www.gnu.org/licenses/>.*/
+* Copyright (C) 2013 François Girard
+*
+* This file is part of Rocket Finder.
+*
+* Rocket Finder is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Rocket Finder is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with Rocket Finder. If not, see <http://www.gnu.org/licenses/>.*/
 
 package com.frankdev.rocketlocator;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-
-import com.mcm001.serial.SerialGpsParser;
-import org.broeuschmeul.android.gps.bluetooth.provider.BleBluetoothGpsSource;
-import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
-import org.broeuschmeul.android.gps.bluetooth.provider.ClassicBluetoothGpsSource;
-
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.hardware.GeomagneticField;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.LocalBroadcastManager;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ToggleButton;
 import com.frankdev.rocketlocator.TouchableWrapper.OnMapMoveListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -46,55 +70,32 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
-
-import android.Manifest;
-import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.preference.PreferenceManager;
-import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.hardware.GeomagneticField;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.LocalBroadcastManager;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
+import com.mcm001.serial.SerialGpsParser;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+import org.broeuschmeul.android.gps.bluetooth.provider.BleBluetoothGpsSource;
+import org.broeuschmeul.android.gps.bluetooth.provider.ClassicBluetoothGpsSource;
+import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
 
 @SuppressLint("HandlerLeak")
-public class MainActivity extends FragmentActivity implements
-        OnMyLocationChangeListener, SensorEventListener, Observer, OnMapMoveListener, OnMapReadyCallback {
+public class MainActivity extends FragmentActivity
+        implements OnMyLocationChangeListener,
+                SensorEventListener,
+                Observer,
+                OnMapMoveListener,
+                OnMapReadyCallback {
 
     public static final String GPS_REINIT = "gps_reinit";
     public static final String CACHE_RELOAD = "cache_reload";
     private final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
     private final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
     private final String mapCacheFolder = "mapCache/";
-    private final static int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_ENABLE_BT = 1;
     private GoogleMap mMap;
     private Marker rocketMarker;
     private UiSettings mUiSettings;
@@ -111,7 +112,7 @@ public class MainActivity extends FragmentActivity implements
     private static Handler updateHandler;
     private static Handler getLocationHandler;
     private SharedPreferences sharedPreferences;
-    //BluetoothGpsManager blueGpsMan;
+    // BluetoothGpsManager blueGpsMan;
     // protected int myAzimuth;
     LatLng myPosition;
     private GeomagneticField geoField;
@@ -150,7 +151,6 @@ public class MainActivity extends FragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         boolean mExternalStorageAvailable = false;
         boolean mExternalStorageWriteable = false;
         String state = Environment.getExternalStorageState();
@@ -181,41 +181,50 @@ public class MainActivity extends FragmentActivity implements
         boolean logEnabled = sharedPreferences.getBoolean(SettingsActivity.PREF_LOGS_ENABLED, false);
         SharedHolder.getInstance().getLogs().setFileLogEnabled(logEnabled);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
             setUpMapIfNeeded();
         } else {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             }
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             }
         }
 
-        updateHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                updateRocketLocation();
-            }
-        };
+        updateHandler =
+                new Handler() {
+                    @Override
+                    public void handleMessage(Message msg) {
+                        updateRocketLocation();
+                    }
+                };
 
-        getLocationHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if (mMap == null)
-                    return;
-                if (msg.obj != null) {
-                    CameraPosition camPos = (CameraPosition) msg.obj;
-                    mMap.animateCamera(CameraUpdateFactory
-                            .newCameraPosition(camPos));
-                    initBluetoothGPS();
-                } else {
-                    testLocation = mMap.getMyLocation();
-                }
-
-            }
-        };
+        getLocationHandler =
+                new Handler() {
+                    @Override
+                    public void handleMessage(Message msg) {
+                        if (mMap == null) return;
+                        if (msg.obj != null) {
+                            CameraPosition camPos = (CameraPosition) msg.obj;
+                            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
+                            initBluetoothGPS();
+                        } else {
+                            testLocation = mMap.getMyLocation();
+                        }
+                    }
+                };
 
         checkGPSEnabled();
         checkBluetoothEnabled();
@@ -228,23 +237,22 @@ public class MainActivity extends FragmentActivity implements
         waitForLoc.start();
 
         ToggleButton chkRocketCompass = (ToggleButton) findViewById(R.id.chkRocketCompass);
-        chkRocketCompass
-                .setOnCheckedChangeListener(new OnCheckedChangeListener() {
+        chkRocketCompass.setOnCheckedChangeListener(
+                new OnCheckedChangeListener() {
                     @Override
-                    public void onCheckedChanged(CompoundButton buttonView,
-                                                 boolean isChecked) {
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         compassEnabled = isChecked;
                     }
                 });
 
         ToggleButton chkRadarBeep = (ToggleButton) findViewById(R.id.chkRadarBeep);
-        chkRadarBeep.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView,
-                                         boolean isChecked) {
-                beepEnabled = isChecked;
-            }
-        });
+        chkRadarBeep.setOnCheckedChangeListener(
+                new OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        beepEnabled = isChecked;
+                    }
+                });
 
         accelAverage = new ExponentialAverage(0.2f);
         magnetAverage = new ExponentialAverage(0.5f);
@@ -262,27 +270,30 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void setupBroadcastReceiver() {
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-        localBroadcastManager.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                initBluetoothGPS();
-            }
-        }, new IntentFilter(GPS_REINIT));
-        localBroadcastManager.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                setUpMap();
-            }
-        }, new IntentFilter(CACHE_RELOAD));
+        LocalBroadcastManager localBroadcastManager =
+                LocalBroadcastManager.getInstance(getApplicationContext());
+        localBroadcastManager.registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        initBluetoothGPS();
+                    }
+                },
+                new IntentFilter(GPS_REINIT));
+        localBroadcastManager.registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        setUpMap();
+                    }
+                },
+                new IntentFilter(CACHE_RELOAD));
     }
 
     private void checkBluetoothEnabled() {
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter
-                .getDefaultAdapter();
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter != null && !mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(
-                    BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
     }
@@ -293,42 +304,40 @@ public class MainActivity extends FragmentActivity implements
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps();
         }
-
     }
 
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(
-                "Your GPS seems to be disabled, do you want to enable it?")
+        builder
+                .setMessage("Your GPS seems to be disabled, do you want to enable it?")
                 .setCancelable(false)
-                .setPositiveButton("Yes",
+                .setPositiveButton(
+                        "Yes",
                         new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog,
-                                                final int id) {
-                                startActivity(new Intent(
-                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            public void onClick(final DialogInterface dialog, final int id) {
+                                startActivity(
+                                        new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                             }
                         })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog,
-                                        final int id) {
-                        dialog.cancel();
-                    }
-                });
+                .setNegativeButton(
+                        "No",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, final int id) {
+                                dialog.cancel();
+                            }
+                        });
         final AlertDialog alert = builder.create();
         alert.show();
     }
 
     private void initBluetoothGPS() {
-        String deviceAddress = sharedPreferences.getString(
-                SettingsActivity.PREF_BLUETOOTH_DEVICE, null);
+        String deviceAddress =
+                sharedPreferences.getString(SettingsActivity.PREF_BLUETOOTH_DEVICE, null);
         if (deviceAddress == null) {
-            Toast.makeText(this, "Please choose a bluetooth device",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Please choose a bluetooth device", Toast.LENGTH_LONG).show();
             return;
         }
-        Toast.makeText(getBaseContext(), "Starting blue GPS",
-                Toast.LENGTH_SHORT).show();
+        Toast.makeText(getBaseContext(), "Starting blue GPS", Toast.LENGTH_SHORT).show();
 
         GenericGpsSource blueGpsMan = SharedHolder.getInstance().getBlueGpsMan();
         if (blueGpsMan == null) {
@@ -340,18 +349,17 @@ public class MainActivity extends FragmentActivity implements
             SharedHolder.getInstance().setBlueGpsMan(blueGpsMan);
             blueGpsMan.addObserver(this);
             /*
-             * {
-             *
-             * @Override public void onPositionChanged(Location location) {
-             * rocketLocation = location; updateHandler.sendEmptyMessage(0);
-             * settings .setLastRocketLocation(rocketLocation );
-             * settings.saveSettings(); } };
-             */
+            * {
+            *
+            * @Override public void onPositionChanged(Location location) {
+            * rocketLocation = location; updateHandler.sendEmptyMessage(0);
+            * settings .setLastRocketLocation(rocketLocation );
+            * settings.saveSettings(); } };
+            */
         } else {
             blueGpsMan.disable(false);
         }
         blueGpsMan.enable();
-
     }
 
     SerialGpsParser serialSource = null;
@@ -366,8 +374,7 @@ public class MainActivity extends FragmentActivity implements
 
     private long getRadarDelay(float value) {
         long ret = (long) Math.abs(value);
-        if (ret > 180)
-            ret = (long) (360 - ret);
+        if (ret > 180) ret = (long) (360 - ret);
 
         return Math.min(ret * ret + 20, 1000);
     }
@@ -375,16 +382,26 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if(serialSource != null) serialSource.onResume();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (serialSource != null) serialSource.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
             setUpMapIfNeeded();
         } else {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             }
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
             }
         }
     }
@@ -392,7 +409,7 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onPause() {
         super.onPause();
-        if(serialSource != null) serialSource.onPause();
+        if (serialSource != null) serialSource.onPause();
     }
 
     private void setUpMapIfNeeded() {
@@ -400,7 +417,8 @@ public class MainActivity extends FragmentActivity implements
         // map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
-            SupportMapFragment fragment = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map));
+            SupportMapFragment fragment =
+                    ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map));
             if (fragment != null) {
                 fragment.getMapAsync(this);
             }
@@ -427,12 +445,15 @@ public class MainActivity extends FragmentActivity implements
         ProgressDialog cancelDialog = new ProgressDialog(this);
         cancelDialog.setTitle(title);
         cancelDialog.setMessage(message);
-        cancelDialog.setButton(DialogInterface.BUTTON_NEGATIVE, buttonText, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                // Use either finish() or return() to either close the activity or just the dialog
-                return;
-            }
-        });
+        cancelDialog.setButton(
+                DialogInterface.BUTTON_NEGATIVE,
+                buttonText,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Use either finish() or return() to either close the activity or just the dialog
+                        return;
+                    }
+                });
         cancelDialog.show();
     }
 
@@ -446,67 +467,70 @@ public class MainActivity extends FragmentActivity implements
         progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         progressBar.setProgress(0);
         progressBar.setMax(1);
-        progressBar.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                // Use either finish() or return() to either close the activity or just the dialog
-                downloadCanceled = true;
-                mTileProvider.setCancelled(true);
-                do {
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+        progressBar.setButton(
+                DialogInterface.BUTTON_NEGATIVE,
+                "Cancel",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Use either finish() or return() to either close the activity or just the dialog
+                        downloadCanceled = true;
+                        mTileProvider.setCancelled(true);
+                        do {
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        } while (mTileProvider.isCancelled());
+                        return;
                     }
-                } while (mTileProvider.isCancelled());
-                return;
-            }
-        });
+                });
         progressBar.show();
 
         progressBarStatus = 0;
 
-        new Thread(new Runnable() {
-            public void run() {
-                int tileCount, tileCountTotal;
+        new Thread(
+                        new Runnable() {
+                            public void run() {
+                                int tileCount, tileCountTotal;
 
-                progressBar.setMax(100);
-                tileCount = mTileProvider.getTileCount();
-                tileCountTotal = mTileCountProvider.getTileCount();
-                do {
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                                progressBar.setMax(100);
+                                tileCount = mTileProvider.getTileCount();
+                                tileCountTotal = mTileCountProvider.getTileCount();
+                                do {
+                                    try {
+                                        Thread.sleep(500);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
 
-                    if (tileCountTotal > 0) {
-                        progressBar.setMax(tileCountTotal);
-                        progressBar.setProgress(tileCount);
-                    }
+                                    if (tileCountTotal > 0) {
+                                        progressBar.setMax(tileCountTotal);
+                                        progressBar.setProgress(tileCount);
+                                    }
 
-                    tileCount = mTileProvider.getTileCount();
-                    tileCountTotal = mTileCountProvider.getTileCount();
-                } while (tileCount < tileCountTotal && !downloadCanceled);
+                                    tileCount = mTileProvider.getTileCount();
+                                    tileCountTotal = mTileCountProvider.getTileCount();
+                                } while (tileCount < tileCountTotal && !downloadCanceled);
 
-                downloadCanceled = false;
-                // Finished
-                progressBar.setMax(tileCountTotal);
-                progressBar.setProgress(tileCount);
+                                downloadCanceled = false;
+                                // Finished
+                                progressBar.setMax(tileCountTotal);
+                                progressBar.setProgress(tileCount);
 
-                mTileProvider.setDownloadDepth(1);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                                mTileProvider.setDownloadDepth(1);
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
 
-                // close the progress bar dialog
-                progressBar.dismiss();
-            }
-        }).start();
-
+                                // close the progress bar dialog
+                                progressBar.dismiss();
+                            }
+                        })
+                .start();
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -527,24 +551,18 @@ public class MainActivity extends FragmentActivity implements
             case R.id.menu_random_pos:
                 Location myLoc = mMap.getMyLocation();
                 if (myLoc == null) {
-                    Toast.makeText(getBaseContext(),
-                            "Map location must be initialized", Toast.LENGTH_SHORT)
+                    Toast.makeText(getBaseContext(), "Map location must be initialized", Toast.LENGTH_SHORT)
                             .show();
                     return true;
                 }
 
                 Location lastLocation;
-                if (rocketLocation == null)
-                    lastLocation = myLoc;
-                else
-                    lastLocation = rocketLocation;
+                if (rocketLocation == null) lastLocation = myLoc;
+                else lastLocation = rocketLocation;
                 rocketLocation = destinationPoint(lastLocation, 90, 10);
 
-                rocketLocation.setLongitude(Math.random() * 0.0002 - 0.0001
-                        + lastLocation.getLongitude());
-                rocketLocation.setLatitude(Math.random() * 0.0002 - 0.0001
-                        + lastLocation.getLatitude());
-
+                rocketLocation.setLongitude(Math.random() * 0.0002 - 0.0001 + lastLocation.getLongitude());
+                rocketLocation.setLatitude(Math.random() * 0.0002 - 0.0001 + lastLocation.getLatitude());
 
                 rocketLocation.setAltitude((double) ((int) (Math.random() * 500 * 100)) / 100);
                 updateRocketLocation();
@@ -581,14 +599,15 @@ public class MainActivity extends FragmentActivity implements
                 return true;
             case R.id.menu_download_map:
 
-                //mTileCountOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mTileCountProvider));
-                //mTileCountOverlay.setVisible(false);
+                // mTileCountOverlay = mMap.addTileOverlay(new
+                // TileOverlayOptions().tileProvider(mTileCountProvider));
+                // mTileCountOverlay.setVisible(false);
                 mTileCountProvider.resetTileCount();
                 mTileCountProvider.setMaxZoom(SharedHolder.maxZoom);
                 mTileCountOverlay.clearTileCache();
 
                 mTileProvider.setMaxZoom(SharedHolder.maxZoom);
-                //mTileProvider.setMaxZoom((int) mMap.getMaxZoomLevel());
+                // mTileProvider.setMaxZoom((int) mMap.getMaxZoomLevel());
                 mTileProvider.setDownloadDepth(SharedHolder.maxDownloadDepth);
                 mTileProvider.resetTileCount();
                 mTileOverlay.clearTileCache();
@@ -598,7 +617,6 @@ public class MainActivity extends FragmentActivity implements
         }
 
         return false;
-
     }
 
     private void ChangeProvider(int providerID) {
@@ -608,23 +626,24 @@ public class MainActivity extends FragmentActivity implements
             cachePath.mkdir();
         }
 
-        if (mTileProvider != null)
-            mTileProvider.setCachePath(cachePath.getAbsolutePath());
-        if (mTileOverlay != null)
-            mTileOverlay.clearTileCache();
+        if (mTileProvider != null) mTileProvider.setCachePath(cachePath.getAbsolutePath());
+        if (mTileOverlay != null) mTileOverlay.clearTileCache();
     }
 
     private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+    public void onRequestPermissionsResult(
+            int requestCode, String[] permissions, int[] grantResults) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
             setUpMapIfNeeded();
         }
     }
@@ -632,27 +651,27 @@ public class MainActivity extends FragmentActivity implements
     @SuppressLint("MissingPermission")
     private void setUpMap() {
         mMap.clear();
-        //mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        // mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationChangeListener(this);
 
         mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
-        //MyUrlTileProvider mTileProvider = new MyUrlTileProvider(512, 512, mUrl);
-        cacheDir = sharedPreferences.getBoolean(SettingsActivity.PREF_EXTERNAL_CACHE, false) ?
-                Environment.getExternalStorageDirectory() : getCacheDir();
+        // MyUrlTileProvider mTileProvider = new MyUrlTileProvider(512, 512, mUrl);
+        cacheDir =
+                sharedPreferences.getBoolean(SettingsActivity.PREF_EXTERNAL_CACHE, false)
+                        ? Environment.getExternalStorageDirectory()
+                        : getCacheDir();
 
         String path = cacheDir.getAbsolutePath();
         path += "/" + mapCacheFolder;
         File cachePath = new File(path);
-        if(!cachePath.isDirectory()) {
+        if (!cachePath.isDirectory()) {
             cachePath.mkdir();
         }
 
-
         boolean online = isNetworkAvailable();
-        if(!online)
+        if (!online)
             Toast.makeText(this, "No internet connection. Going offline.", Toast.LENGTH_LONG).show();
-
 
         mTileProvider = new MyUrlCachedTileProvider(512, 512, cachePath.getAbsolutePath());
         mTileProvider.setMaxZoom(SharedHolder.maxZoom);
@@ -664,23 +683,21 @@ public class MainActivity extends FragmentActivity implements
         mTileOverlay.setZIndex(0);
 
         mTileCountProvider = new TileCountProvider();
-        mTileCountOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mTileCountProvider));
+        mTileCountOverlay =
+                mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mTileCountProvider));
         mTileCountOverlay.setZIndex(-1);
-        //mTileCountProvider.resetTileCount();
-        //mTileCountProvider.setMaxZoom((int) mMap.getMaxZoomLevel());
+        // mTileCountProvider.resetTileCount();
+        // mTileCountProvider.setMaxZoom((int) mMap.getMaxZoomLevel());
 
+        // CameraUpdate upd = CameraUpdateFactory.newLatLngZoom(new LatLng(LAT, LON), ZOOM);
+        // mMap.moveCamera(upd);
 
-        //CameraUpdate upd = CameraUpdateFactory.newLatLngZoom(new LatLng(LAT, LON), ZOOM);
-        //mMap.moveCamera(upd);
-
-
-        if (rocketLocation != null)
-            updateRocketLocation();
+        if (rocketLocation != null) updateRocketLocation();
         /*
-         * mMap.moveCamera( CameraUpdateFactory.newCameraPosition(new
-         * CameraPosition());//.newLatLngZoom(new
-         * LatLng(myLoc.getLatitude(),myLoc.getLongitude()), 10));
-         */
+        * mMap.moveCamera( CameraUpdateFactory.newCameraPosition(new
+        * CameraPosition());//.newLatLngZoom(new
+        * LatLng(myLoc.getLatitude(),myLoc.getLongitude()), 10));
+        */
         mUiSettings = mMap.getUiSettings();
         mUiSettings.setCompassEnabled(true);
         // mUiSettings.
@@ -699,16 +716,14 @@ public class MainActivity extends FragmentActivity implements
     public static final String MEASURE_UNIT_IMPERIAL = "Imperial";
     public static final String MEASURE_UNIT_METRIC = "Metric";
 
-    void updateLabels(){
-        String measureUnit = sharedPreferences.getString(
-                SettingsActivity.PREF_MEASURE_UNIT, null);
+    void updateLabels() {
+        String measureUnit = sharedPreferences.getString(SettingsActivity.PREF_MEASURE_UNIT, null);
 
-        if(measureUnit == null)
-            measureUnit = MEASURE_UNIT_METRIC;
+        if (measureUnit == null) measureUnit = MEASURE_UNIT_METRIC;
 
         String suffix = "m";
         float unitRatio = 1;
-        if(measureUnit.equals(MEASURE_UNIT_IMPERIAL)) {
+        if (measureUnit.equals(MEASURE_UNIT_IMPERIAL)) {
             suffix = "ft";
             unitRatio = 3.28f;
         }
@@ -717,14 +732,16 @@ public class MainActivity extends FragmentActivity implements
         TextView lblMaxAltitude = findViewById(R.id.lblMaxAltitude);
         TextView lblDistance = findViewById(R.id.lblDistance);
 
-        lblCurrentAltitude.setText(String.format("Current Altitude: %.2f%s",currentAltitude * unitRatio, suffix));
-        lblMaxAltitude.setText(String.format("Maximum Altitude: %.2f%s",maxAltitude * unitRatio, suffix));
-        lblDistance.setText(String.format("Distance Altitude: %.2f%s",rocketDistance * unitRatio, suffix));
+        lblCurrentAltitude.setText(
+                String.format("Current Altitude: %.2f%s", currentAltitude * unitRatio, suffix));
+        lblMaxAltitude.setText(
+                String.format("Maximum Altitude: %.2f%s", maxAltitude * unitRatio, suffix));
+        lblDistance.setText(
+                String.format("Distance Altitude: %.2f%s", rocketDistance * unitRatio, suffix));
     }
 
     private void updateRocketLocation() {
-        if (rocketLocation == null)
-            return;
+        if (rocketLocation == null) return;
 
         if (rocketLocList.size() == 0) {
             addPosition();
@@ -740,10 +757,8 @@ public class MainActivity extends FragmentActivity implements
 
         // Draw marker at Rocket position
         if (rocketMarker == null) {
-            rocketMarker = mMap.addMarker(new MarkerOptions()
-                    .position(rocketPosition));
-        } else
-            rocketMarker.setPosition(rocketPosition);
+            rocketMarker = mMap.addMarker(new MarkerOptions().position(rocketPosition));
+        } else rocketMarker.setPosition(rocketPosition);
 
         Location myLoc = mMap.getMyLocation();
         // myLoc = null when the android gps is not initialized yet.
@@ -754,17 +769,19 @@ public class MainActivity extends FragmentActivity implements
 
         // Max Altitude
         double altitude = rocketLocation.getAltitude() - altitudeOffset;
-        if (altitude > maxAltitude)
-            maxAltitude = altitude;
+        if (altitude > maxAltitude) maxAltitude = altitude;
         currentAltitude = altitude;
 
         updateLabels();
 
         // Rocket path
         if (rocketPath == null) {
-            rocketPath = mMap.addPolyline(new PolylineOptions()
-                    .add(rocketPosList.get(0)).width(5.0f)
-                    .color(Color.rgb(0, 0, 128)));
+            rocketPath =
+                    mMap.addPolyline(
+                            new PolylineOptions()
+                                    .add(rocketPosList.get(0))
+                                    .width(5.0f)
+                                    .color(Color.rgb(0, 0, 128)));
 
             rocketPath.setZIndex(999);
         }
@@ -774,8 +791,7 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void updateRocketLine(LatLng rocketPosition) {
-        if (myPosition == null || rocketPosition == null)
-            return;
+        if (myPosition == null || rocketPosition == null) return;
         // Rocket Distance
         rocketDistance = mMap.getMyLocation().distanceTo(rocketLocation);
 
@@ -783,9 +799,9 @@ public class MainActivity extends FragmentActivity implements
 
         // Draw line between myPosition and Rocket
         if (rocketLine == null) {
-            rocketLine = mMap.addPolyline(new PolylineOptions()
-                    .add(myPosition, rocketPosition).width(5.0f)
-                    .color(Color.WHITE));
+            rocketLine =
+                    mMap.addPolyline(
+                            new PolylineOptions().add(myPosition, rocketPosition).width(5.0f).color(Color.WHITE));
             rocketLine.setZIndex(999);
         } else {
             List<LatLng> positionList = new ArrayList<LatLng>();
@@ -796,12 +812,10 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void addPosition() {
-        LatLng rocketPosition = new LatLng(rocketLocation.getLatitude(),
-                rocketLocation.getLongitude());
+        LatLng rocketPosition = new LatLng(rocketLocation.getLatitude(), rocketLocation.getLongitude());
 
         rocketPosList.add(rocketPosition);
         rocketLocList.add(rocketLocation);
-
     }
 
     private class radarBeepThread extends Thread {
@@ -812,8 +826,7 @@ public class MainActivity extends FragmentActivity implements
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (radarDelay > 0 && beepEnabled)
-                    Sounds.radar_beep.start();
+                if (radarDelay > 0 && beepEnabled) Sounds.radar_beep.start();
             }
         }
     }
@@ -829,14 +842,15 @@ public class MainActivity extends FragmentActivity implements
                 }
             }
             Sounds.gps_connected.start();
-            CameraPosition camPos = new CameraPosition.Builder()
-                    .target(new LatLng(testLocation.getLatitude(), testLocation
-                            .getLongitude())).zoom(20f).build();
+            CameraPosition camPos =
+                    new CameraPosition.Builder()
+                            .target(new LatLng(testLocation.getLatitude(), testLocation.getLongitude()))
+                            .zoom(20f)
+                            .build();
             Message msg = new Message();
             msg.obj = camPos;
 
             getLocationHandler.sendMessage(msg);
-
         }
     }
 
@@ -866,8 +880,7 @@ public class MainActivity extends FragmentActivity implements
         xml.append("<altitudeMode>absolute</altitudeMode>");
         xml.append("<coordinates>");
         for (Location loc : rocketLocList) {
-            xml.append(loc.getLongitude() + "," + loc.getLatitude() + ","
-                    + loc.getAltitude() + "\r\n");
+            xml.append(loc.getLongitude() + "," + loc.getLatitude() + "," + loc.getAltitude() + "\r\n");
         }
         xml.append("</coordinates>");
         xml.append("</LineString>");
@@ -881,31 +894,29 @@ public class MainActivity extends FragmentActivity implements
         String xmlStr = createXml();
         try {
             // Date now = new Date();
-            File myFile = new File(Environment.getExternalStorageDirectory()
-                    + "/rocket_path.txt");
+            File myFile = new File(Environment.getExternalStorageDirectory() + "/rocket_path.txt");
             myFile.createNewFile();
             FileOutputStream fOut = new FileOutputStream(myFile);
             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
             myOutWriter.append(xmlStr);
             myOutWriter.close();
             fOut.close();
-            Toast.makeText(getBaseContext(), "Done writing file",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(getBaseContext(), "Done writing file", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Toast.makeText(getBaseContext(), e.getMessage(), Toast.LENGTH_LONG)
-                    .show();
+            Toast.makeText(getBaseContext(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     public void onMyLocationChange(Location location) {
-        if (mMap == null || mMap.getMyLocation() == null)
-            return;
+        if (mMap == null || mMap.getMyLocation() == null) return;
 
-        geoField = new GeomagneticField(Double.valueOf(location.getLatitude())
-                .floatValue(), Double.valueOf(location.getLongitude())
-                .floatValue(), Double.valueOf(location.getAltitude())
-                .floatValue(), System.currentTimeMillis());
+        geoField =
+                new GeomagneticField(
+                        Double.valueOf(location.getLatitude()).floatValue(),
+                        Double.valueOf(location.getLongitude()).floatValue(),
+                        Double.valueOf(location.getAltitude()).floatValue(),
+                        System.currentTimeMillis());
         myPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
         if (rocketPosList.size() > 0) {
@@ -916,8 +927,8 @@ public class MainActivity extends FragmentActivity implements
         ToggleButton chkFollowMe = (ToggleButton) findViewById(R.id.chkFollowMe);
 
         if (chkFollowMe.isChecked()) {
-            CameraPosition camPos = new CameraPosition.Builder(
-                    mMap.getCameraPosition()).target(myPosition).build();
+            CameraPosition camPos =
+                    new CameraPosition.Builder(mMap.getCameraPosition()).target(myPosition).build();
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(camPos));
         }
     }
@@ -925,32 +936,32 @@ public class MainActivity extends FragmentActivity implements
     // This function registers sensor listeners for the accelerometer,
     // magnetometer and gyroscope.
     public void initListeners() {
-        mSensorManager.registerListener(this,
+        mSensorManager.registerListener(
+                this,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_UI);
 
         /*
-         * mSensorManager.registerListener(this,
-         * mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
-         * SensorManager.SENSOR_DELAY_FASTEST);
-         */
+        * mSensorManager.registerListener(this,
+        * mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+        * SensorManager.SENSOR_DELAY_FASTEST);
+        */
 
-        mSensorManager.registerListener(this,
+        mSensorManager.registerListener(
+                this,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
                 SensorManager.SENSOR_DELAY_UI);
     }
 
     // calculates orientation angles from accelerometer and magnetometer output
     public void calculateAccMagOrientation() {
-        if (SensorManager
-                .getRotationMatrix(rotationMatrix, null, accel, magnet)) {
+        if (SensorManager.getRotationMatrix(rotationMatrix, null, accel, magnet)) {
             SensorManager.getOrientation(rotationMatrix, accMagOrientation);
         }
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -964,10 +975,10 @@ public class MainActivity extends FragmentActivity implements
                 rotateCamera();
                 break;
 
-            /*
-             * case Sensor.TYPE_GYROSCOPE: // process gyro data gyroFunction(event);
-             * break;
-             */
+                /*
+                * case Sensor.TYPE_GYROSCOPE: // process gyro data gyroFunction(event);
+                * break;
+                */
 
             case Sensor.TYPE_MAGNETIC_FIELD:
                 // copy new magnetometer data into magnet array
@@ -979,8 +990,7 @@ public class MainActivity extends FragmentActivity implements
     }
 
     private void rotateCamera() {
-        if (!compassEnabled || mMap == null)
-            return;
+        if (!compassEnabled || mMap == null) return;
 
         float azimuth = (float) (int) (accMagOrientation[0] * 180 / Math.PI);
 
@@ -1000,13 +1010,12 @@ public class MainActivity extends FragmentActivity implements
             deltaBearing = deltaBearing - geoField.getDeclination();
             radarDelay = getRadarDelay(deltaBearing);
 
-            //TextView lblBearing = (TextView) findViewById(R.id.TextView01);
-            //lblBearing.setText("Bearing: " + radarDelay + " Azim: " + azimuth);
+            // TextView lblBearing = (TextView) findViewById(R.id.TextView01);
+            // lblBearing.setText("Bearing: " + radarDelay + " Azim: " + azimuth);
         }
 
-
-        CameraPosition camPos = new CameraPosition.Builder(
-                mMap.getCameraPosition()).bearing(heading).build();
+        CameraPosition camPos =
+                new CameraPosition.Builder(mMap.getCameraPosition()).bearing(heading).build();
         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(camPos));
     }
 
@@ -1037,7 +1046,7 @@ public class MainActivity extends FragmentActivity implements
     public void update(Observable o, Object data) {
         NmeaValues values = (NmeaValues) data;
         Location location = values.getLocation();
-        if(location != null){
+        if (location != null) {
             rocketLocation = location;
             updateHandler.sendEmptyMessage(0);
             settings.setLastRocketLocation(rocketLocation);
@@ -1054,30 +1063,33 @@ public class MainActivity extends FragmentActivity implements
     }
 
     /**
-     * Returns the destination point from 'this' point having travelled the given distance on the
-     * given initial bearing (bearing normally varies around path followed).
-     *
-     * @param   {LatLon} start - Initial position.
-     * @param   {number} bearing - Initial bearing in degrees.
-     * @param   {number} distance - Distance in km (on sphere of 'this' radius).
-     * @returns {LatLon} Destination point.
-     *
-     * @example
-     *     var p1 = new LatLon(51.4778, -0.0015);
-     *     var p2 = p1.destinationPoint(300.7, 7.794); // p2.toString(): 51.5135�N, 000.0983�W
-     */
-    Location destinationPoint(Location start, float bearing, float distance)
-    {
-        double dist = distance / 6378.1; //Radius of earth
+    * Returns the destination point from 'this' point having travelled the given distance on the
+    * given initial bearing (bearing normally varies around path followed).
+    *
+    * @param {LatLon} start - Initial position.
+    * @param {number} bearing - Initial bearing in degrees.
+    * @param {number} distance - Distance in km (on sphere of 'this' radius).
+    * @returns {LatLon} Destination point.
+    * @example var p1 = new LatLon(51.4778, -0.0015); var p2 = p1.destinationPoint(300.7, 7.794); //
+    *     p2.toString(): 51.5135�N, 000.0983�W
+    */
+    Location destinationPoint(Location start, float bearing, float distance) {
+        double dist = distance / 6378.1; // Radius of earth
         double brng = Math.toRadians(bearing);
 
         double lat1 = Math.toRadians(start.getLatitude());
         double lon1 = Math.toRadians(start.getLongitude());
 
-        double lat2 = Math.asin( Math.sin(lat1)*Math.cos(dist) + Math.cos(lat1)*Math.sin(dist)*Math.cos(brng) );
-        double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(dist)*Math.cos(lat1), Math.cos(dist)-Math.sin(lat1)*Math.sin(lat2));
+        double lat2 =
+                Math.asin(
+                        Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1) * Math.sin(dist) * Math.cos(brng));
+        double lon2 =
+                lon1
+                        + Math.atan2(
+                                Math.sin(brng) * Math.sin(dist) * Math.cos(lat1),
+                                Math.cos(dist) - Math.sin(lat1) * Math.sin(lat2));
 
-        lon2 = (lon2+ 3*Math.PI) % (2*Math.PI) - Math.PI;
+        lon2 = (lon2 + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
 
         Location newLocation = new Location("");
         newLocation.setLatitude(Math.toDegrees(lat2));

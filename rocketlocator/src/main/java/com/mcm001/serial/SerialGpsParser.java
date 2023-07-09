@@ -6,60 +6,63 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.widget.Toast;
-import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
-
 import java.lang.ref.WeakReference;
 import java.util.Set;
+import org.broeuschmeul.android.gps.bluetooth.provider.GenericGpsSource;
 
-public class SerialGpsParser extends GenericGpsSource  {
+public class SerialGpsParser extends GenericGpsSource {
 
     private final Context ctx;
 
-
     /*
-     * Notifications from UsbService will be received here.
-     */
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case UsbService.ACTION_USB_PERMISSION_GRANTED: // USB PERMISSION GRANTED
-                    Toast.makeText(context, "USB Ready", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED: // USB PERMISSION NOT GRANTED
-                    Toast.makeText(context, "USB Permission not granted", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_NO_USB: // NO USB CONNECTED
-                    Toast.makeText(context, "No USB connected", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_USB_DISCONNECTED: // USB DISCONNECTED
-                    Toast.makeText(context, "USB disconnected", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_USB_NOT_SUPPORTED: // USB NOT SUPPORTED
-                    Toast.makeText(context, "USB device not supported", Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
+    * Notifications from UsbService will be received here.
+    */
+    private final BroadcastReceiver mUsbReceiver =
+            new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    switch (intent.getAction()) {
+                        case UsbService.ACTION_USB_PERMISSION_GRANTED: // USB PERMISSION GRANTED
+                            Toast.makeText(context, "USB Ready", Toast.LENGTH_SHORT).show();
+                            break;
+                        case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED: // USB PERMISSION NOT GRANTED
+                            Toast.makeText(context, "USB Permission not granted", Toast.LENGTH_SHORT).show();
+                            break;
+                        case UsbService.ACTION_NO_USB: // NO USB CONNECTED
+                            Toast.makeText(context, "No USB connected", Toast.LENGTH_SHORT).show();
+                            break;
+                        case UsbService.ACTION_USB_DISCONNECTED: // USB DISCONNECTED
+                            Toast.makeText(context, "USB disconnected", Toast.LENGTH_SHORT).show();
+                            break;
+                        case UsbService.ACTION_USB_NOT_SUPPORTED: // USB NOT SUPPORTED
+                            Toast.makeText(context, "USB device not supported", Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                }
+            };
 
     private UsbService usbService;
     private MyHandler mHandler;
-    private final ServiceConnection usbConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName arg0, IBinder arg1) {
-            usbService = ((UsbService.UsbBinder) arg1).getService();
-            usbService.setHandler(mHandler);
-        }
+    private final ServiceConnection usbConnection =
+            new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+                    usbService = ((UsbService.UsbBinder) arg1).getService();
+                    usbService.setHandler(mHandler);
+                }
 
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            usbService = null;
-        }
-    };
+                @Override
+                public void onServiceDisconnected(ComponentName arg0) {
+                    usbService = null;
+                }
+            };
 
     public void onResume() {
-        setFilters();  // Start listening notifications from UsbService
-        startService(UsbService.class, usbConnection, null); // Start UsbService(if it was not started before) and Bind it
+        setFilters(); // Start listening notifications from UsbService
+        startService(
+                UsbService.class,
+                usbConnection,
+                null); // Start UsbService(if it was not started before) and Bind it
     }
 
     public void onPause() {
@@ -94,8 +97,8 @@ public class SerialGpsParser extends GenericGpsSource  {
     }
 
     /*
-     * This handler will be passed to UsbService. Data received from serial port is displayed through this handler
-     */
+    * This handler will be passed to UsbService. Data received from serial port is displayed through this handler
+    */
     private class MyHandler extends Handler {
         private final WeakReference<Context> mActivity;
 
@@ -112,10 +115,10 @@ public class SerialGpsParser extends GenericGpsSource  {
                     SerialGpsParser.this.notifyNmeaSentence(data);
                     break;
                 case UsbService.CTS_CHANGE:
-                    Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
+                    Toast.makeText(mActivity.get(), "CTS_CHANGE", Toast.LENGTH_LONG).show();
                     break;
                 case UsbService.DSR_CHANGE:
-                    Toast.makeText(mActivity.get(), "DSR_CHANGE",Toast.LENGTH_LONG).show();
+                    Toast.makeText(mActivity.get(), "DSR_CHANGE", Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -141,7 +144,5 @@ public class SerialGpsParser extends GenericGpsSource  {
     }
 
     @Override
-    public void disable(boolean restart) {
-    }
-
+    public void disable(boolean restart) {}
 }

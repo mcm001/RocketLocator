@@ -1,14 +1,10 @@
 package com.frankdev.rocketlocator;
 
 import com.google.android.gms.maps.model.UrlTileProvider;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/**
- * Created by Francois on 2016-06-07.
- *
- */
+/** Created by Francois on 2016-06-07. */
 public class MyUrlTileProvider extends UrlTileProvider {
 
     private String baseUrl;
@@ -21,7 +17,8 @@ public class MyUrlTileProvider extends UrlTileProvider {
     @Override
     public URL getTileUrl(int x, int y, int zoom) {
         try {
-            return new URL(baseUrl.replace("{z}", ""+zoom).replace("{x}",""+x).replace("{y}",""+y));
+            return new URL(
+                    baseUrl.replace("{z}", "" + zoom).replace("{x}", "" + x).replace("{y}", "" + y));
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
