@@ -25,6 +25,11 @@
 		android:key="@string/pref_external_cache_key"
 		android:title="@string/external_cache"
 		android:defaultValue="false" />
+	<EditTextPreference
+		android:defaultValue="ws://localhost:8080"
+		android:key="@string/pref_websocket_uri_key"
+		android:singleLine="true"
+		android:title="WebSocket URI" />
 	<Preference
 		android:key="@string/pref_about_key"
 		android:persistent="false"
